@@ -1,0 +1,132 @@
+---
+title: "1st-assignment"
+author: "郑艾轩"
+date: "2024-10-29"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+```{r}
+#读文件
+library(tidyverse)
+shuju <- read.csv("C:/Users/DELL/Desktop/2023_09_12_cleaned(1).csv")
+shuju
+str(shuju) 
+names(shuju)
+summary(shuju)
+```
+# 主要发现
+#1.该网站大部分二手房都可以随时看房
+#2.大部分二手房房产证都满了2年
+#3.大部分二手房都有1-2个客厅
+
+```{r}
+#数据分析1：
+#价格特点：分析price_sqm
+mean(shuju$price_sqm)
+median(shuju$price_sqm) 
+range(shuju$price_sqm)
+sd(shuju$price_sqm)
+
+#price_sqm直方图
+ggplot(shuju) +
+  geom_histogram(aes(price_sqm),bins = 20,color="red")
+#每平米价格（price_sqm）的均值为15148.49，中位数为14404，标准差为6323.18，离散程度较大。最小值为 1771.00，最大值为 44656.00，说明房价的波动范围较大
+```
+
+
+```{r}
+#数据分析2
+#价格特点：分析price_ttl
+mean(shuju$price_ttl)
+median(shuju$price_ttl) 
+range(shuju$price_ttl)
+sd(shuju$price_ttl)
+#总价（price_ttl）的均值为 155.86，中位数为137，标准差为 95.55，说明总价分布较为分散。最小值为 10.60，最大值为 1380.00，表明房价存在较大的差异。
+#price_sqm箱线图
+ggplot(shuju) +
+  geom_boxplot(aes(price_ttl))
+```
+
+
+```{r}
+#数据分析3
+#建筑风格进行分析
+jianzhu_style<-shuju %>% 
+  group_by(property_style) %>% 
+  summarise(count = n()) %>% 
+  arrange(desc(count))
+#建筑风格直方图
+data <- data.frame(category = c('板楼', '板塔结合', '塔楼', '暂无数据','平房'),
+                   count = c(1781, 615, 527, 72, 5))
+ggplot(data, aes(x = category,y=count)) +
+  geom_bar(stat = "identity", fill = "green")
+#结论：板楼的数量最多，为 1781 套；其次是板塔结合，有 615 套；塔楼有 527 套；暂无数据的有 72 套；平房最少，只有 5 套
+```
+
+
+```{r}
+## 探索问题1
+#总价和建筑风格的关系：
+ggplot(shuju, aes(x = property_style, y = price_ttl)) +
+  geom_boxplot()
+
+fenxi1<-shuju %>%
+  group_by(property_style) %>%
+  summarise(mean_price = mean(price_ttl),
+            var_price = var(price_ttl),
+            median_price=median(price_ttl),
+            sd_price = sd(price_ttl))
+#板塔结合型建筑的平均总价最高为174.8,中位数最高为155，但数据分布不均，离散程度较大。平房平均总价最低，数据较集中，平均总价为132.6,中位数为135
+```
+
+
+```{r}
+## 探索问题2
+#每平米价格和建筑风格的关系：
+ggplot(shuju, aes(x = property_style, y = price_sqm)) +
+  geom_boxplot()
+
+fenxi2<-shuju %>%
+  group_by(property_style) %>%
+  summarise(mean_price = mean(price_sqm),
+            var_price = var(price_sqm),
+            median_price=median(price_sqm),
+            sd_price = sd(price_sqm))
+#结论：板塔结合型建筑的平均每平米单价最高为16683.3，中位数为16248，但数据分布不均。平房型数据较集中，平均单价是12859.8，中位数是12577
+#结论：不同建筑形式的平均总价和每平米价格也有所不同。板塔结合的平均总价和每平米价格最高；平房的平均总价和每平米价格最低。
+```
+
+
+```{r}
+## 探索问题3
+##关注人数前十名的房子有什么特点？
+top_10_houses <- shuju %>% 
+  arrange(desc(followers)) %>% 
+  head(10)
+ # 价格特点，价格统计量
+  mean_price <- mean(top_10_houses$price_ttl)
+  median_price <- median(top_10_houses$price_ttl)
+  sd_price <- sd(top_10_houses$price_ttl)
+   # 绘制价格直方图
+  hist(top_10_houses$price_ttl)
+#建筑风格特点，建筑风格频率
+  style_frequency <- table(top_10_houses$property_style)
+   # 绘制建筑风格饼图
+  pie(style_frequency, main = "关注人数前十名房子建筑风格分布")
+#建筑装修特点，建筑装修频率
+  decoration_frequency <- table(top_10_houses$decoration)
+   # 绘制装修饼图
+   pie(decoration_frequency, main = "关注人数前十名房子装修风格分布")  
+  #房间特点
+  room_frequency <- table(top_10_houses$bedrooms)
+   # 绘制房间饼图
+  pie( room_frequency, main = "关注人数前十名房间分布") 
+#结论：在二手网站最受关注的房子一般都是精装房，板楼结构，有两个卧室，均价在184.6万元一套
+
+```
+# 发现总结
+#卖家在二手网站会关注的房子特征：精装房，板楼结构，有两个卧室，均价在184.6万元一套
+
+
